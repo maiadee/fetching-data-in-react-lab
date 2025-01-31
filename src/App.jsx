@@ -9,40 +9,52 @@ const App = () => {
   const [starshipsData, setStarshipsData] = useState([]);
   const [displayedStarships, setDisplayedStarships] = useState([]);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const getInitialData = async () => {
       try {
-        const response = await getStarships("");
-        setStarshipsData({
-          name: response.data.name,
-          manufacturer: response.data.manufacturer,
-          model: response.data.model,
-        });
-        setDisplayedStarships({
-          name: response.data.name,
-          manufacturer: response.data.manufacturer,
-          model: response.data.model,
-        });
+        const response = await getStarships();
+        console.log(response);
+        setStarshipsData(response.data.results);
+        setDisplayedStarships(response.data.results);
       } catch (error) {
         console.error(error);
-        setError(error.response.data.error.message);
+        setError(error.message);
+      } finally {
+        setIsLoading(false);
       }
-    }
-    getInitialData()
-  });
+    };
+    getInitialData();
+  }, []);
 
-  const getStarshipsList = async (e) => {
+  // const getStarshipsList = async (e) => {
+  //   try {
+  //     const response = await getStarships(searchTerm);
+  //     setStarshipsData({
+  //       name: response.data.name,
+  //       manufacturer: response.data.manufacturer,
+  //       model: response.data.model,
+  //     });
+  //   } catch (error) {
+  //     console.error(`Error fetching Starships`);
+  //     setError(error.message);
+  //   }
+  // };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setIsLoading(true);
     try {
       const response = await getStarships(searchTerm);
-      setStarshipsData({
-        name: response.data.name,
-        manufacturer: response.data.manufacturer,
-        model: response.data.model,
-      });
+      console.log(response);
+      setStarshipsData(response.data.results);
+      setSearchTerm("");
     } catch (error) {
       console.error(`Error fetching Starships`);
-      setError(error.response.data.error.message);
+      setError(error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -50,7 +62,7 @@ const App = () => {
     <>
       <h1>Star Wars API</h1>
       <section>
-        <form onSubmit={getStarshipsList}>
+        <form onSubmit={handleSubmit}>
           <label hidden htmlFor="search"></label>
           <input
             type="search"
@@ -61,8 +73,10 @@ const App = () => {
             value={searchTerm}
           />
           <button type="submit">Find a Starship</button>
+          <button onClick={() => setDisplayedStarships}>Show All</button>
         </form>
       </section>
+      <StarshipList starships={starshipsData} />
     </>
   );
 };
